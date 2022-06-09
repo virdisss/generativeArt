@@ -3,20 +3,15 @@ import { KawaseBlurFilter } from "https://cdn.skypack.dev/@pixi/filter-kawase-bl
 import SimplexNoise from "https://cdn.skypack.dev/simplex-noise";
 import hsl from "https://cdn.skypack.dev/hsl-to-hex";
 import debounce from "https://cdn.skypack.dev/debounce";
-// return a random number within a range
+
 function random(min, max) {
   return Math.random() * (max - min) + min;
 }
 
-// map a number from 1 range to another
 function map(n, start1, end1, start2, end2) {
   return ((n - start1) / (end1 - start1)) * (end2 - start2) + start2;
 }
 
-// Create a new simplex noise instance
-const simplex = new SimplexNoise();
-
-// ColorPalette class
 class ColorPalette {
   constructor() {
     this.setColors();
@@ -74,9 +69,6 @@ class ColorPalette {
   }
 }
 
-const colorPalette = new ColorPalette();
-
-// Orb class
 class Orb {
   // Pixi takes hex colors as hexidecimal literals (0x rather than a string with '#')
   constructor(fill = 0x000000) {
@@ -178,85 +170,73 @@ class Orb {
 }
 
 // Create PixiJS app
+const simplex = new SimplexNoise();
+const colorPalette = new ColorPalette();
+
 const app = new PIXI.Application({
-  // render to <canvas class="orb-canvas"></canvas>
   view: document.querySelector(".unpleasant-highEnergy-beginner"),
-  // auto adjust size to fit the current window
   width: 164,
   height: 164,
-  backgroundColor: 0xff8768 //0xFADBD8
+  backgroundColor: 0xff8768
 });
 
-const maskContainer = new PIXI.Container();
 const blurContainer = new PIXI.Container();
 blurContainer.filters = [new KawaseBlurFilter(1, 1, true)];
-
-// container.position.set(100, 35);
 app.stage.addChild(blurContainer);
 
 const svgTexture = PIXI.Texture.from("mask2.svg");
 const mask = new PIXI.Sprite(svgTexture);
 mask.scale.set(0.2, 0.2);
-maskContainer.pivot.x = 110;
-maskContainer.pivot.y = 70;
-maskContainer.position.set(
-  app.renderer.width / 2 + 40,
-  app.renderer.height / 2
-);
 
-// Create a Graphics object, set a fill color, draw a rectangle
-let obj2 = new PIXI.Graphics();
-obj2.beginFill(0xff8766);
-obj2.drawRect(-30, -30, app.renderer.width, app.renderer.height);
+mask.texture.baseTexture.on("loaded", () => {
+  const maskContainer = new PIXI.Container();
+  maskContainer.pivot.x = 0;
+  maskContainer.pivot.y = 0;
+  maskContainer.position.set(
+    (app.renderer.width - mask.width) / 2,
+    (app.renderer.height - mask.height) / 2
+  );
 
-// Add it to the stage to render
-blurContainer.addChild(obj2);
+  let pixiGraph = new PIXI.Graphics();
+  pixiGraph.beginFill(0xff8766);
+  pixiGraph.drawRect(-30, -30, app.renderer.width, app.renderer.height);
+  blurContainer.addChild(pixiGraph);
 
-// Create a Graphics object, set a fill color, draw a rectangle
-let obj = new PIXI.Graphics();
-obj.beginFill(0xffbd38);
-obj.lineStyle(2, 0x000000, 1);
-obj.drawRect(-30, -30, app.renderer.width, app.renderer.height);
+  let anotherPixiGraph = new PIXI.Graphics();
+  anotherPixiGraph.beginFill(0xffbd38);
+  anotherPixiGraph.lineStyle(2, 0x000000, 1);
+  anotherPixiGraph.drawRect(-30, -30, app.renderer.width, app.renderer.height);
 
-// Add it to the stage to render
-maskContainer.addChild(obj);
+  maskContainer.addChild(anotherPixiGraph);
+  maskContainer.addChild(mask);
+  maskContainer.mask = mask;
+  blurContainer.addChild(maskContainer);
 
-maskContainer.addChild(mask);
-maskContainer.mask = mask;
+  const orbs = [];
+  for (let i = 0; i < 3; i++) {
+    const orb = new Orb(colorPalette.randomColor());
+    maskContainer.addChild(orb.graphics);
+    orbs.push(orb);
+  }
 
-blurContainer.addChild(maskContainer);
+  let noiseFilter = new PIXI.filters.NoiseFilter(0.05);
+  let colorMatrix = new PIXI.filters.ColorMatrixFilter();
+  app.stage.filters = [noiseFilter, colorMatrix];
 
-// Create orbs
-const orbs = [];
-
-for (let i = 0; i < 3; i++) {
-  const orb = new Orb(colorPalette.randomColor());
-  maskContainer.addChild(orb.graphics);
-  orbs.push(orb);
-}
-
-app.stage.filters = [];
-
-let noiseFilter = new PIXI.filters.NoiseFilter(0.05);
-app.stage.filters.push(noiseFilter);
-
-// trying out colorMatrixFilter
-let colorMatrix = new PIXI.filters.ColorMatrixFilter();
-app.stage.filters.push(colorMatrix);
-
-// Animate!
-if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-  app.ticker.add(() => {
-    // update and render each orb, each frame. app.ticker attempts to run at 60fps
+  // Animate!
+  if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    app.ticker.add(() => {
+      // update and render each orb, each frame. app.ticker attempts to run at 60fps
+      orbs.forEach((orb) => {
+        orb.update();
+        orb.render();
+      });
+    });
+  } else {
+    // perform one update and render per orb, do not animate
     orbs.forEach((orb) => {
       orb.update();
       orb.render();
     });
-  });
-} else {
-  // perform one update and render per orb, do not animate
-  orbs.forEach((orb) => {
-    orb.update();
-    orb.render();
-  });
-}
+  }
+});
