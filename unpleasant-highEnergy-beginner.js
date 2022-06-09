@@ -182,24 +182,10 @@ const app = new PIXI.Application({
   // render to <canvas class="orb-canvas"></canvas>
   view: document.querySelector(".unpleasant-highEnergy-beginner"),
   // auto adjust size to fit the current window
-  width: 360,
-  height: 360,
-  backgroundColor: 0xff8766 //0xFADBD8
+  width: 164,
+  height: 164,
+  backgroundColor: 0xff8768 //0xFADBD8
 });
-
-// // create contents for the masked container
-let text = new PIXI.Text(
-  "crossing the river i pluck hibiscus-flowers: in the orchid-swamps are many fragrant herbs. i gather them, but who shall i send them to? my love is living in lands far away. i turn and look towards my own country: the long road stretches on for ever. \n\n" +
-    "the same heart, yet a different dwelling: always fretting, till we are grown old!.",
-  {
-    fontSize: 24,
-    fill: 0x222222,
-    wordWrap: true,
-    wordWrapWidth: 280
-  }
-);
-text.x = 10;
-// app.stage.addChild(text);
 
 const maskContainer = new PIXI.Container();
 const blurContainer = new PIXI.Container();
@@ -210,16 +196,13 @@ app.stage.addChild(blurContainer);
 
 const svgTexture = PIXI.Texture.from("mask2.svg");
 const mask = new PIXI.Sprite(svgTexture);
-mask.scale.set(0.5, 0.5);
-maskContainer.pivot.x = 120;
-maskContainer.pivot.y = 120;
+mask.scale.set(0.2, 0.2);
+maskContainer.pivot.x = 110;
+maskContainer.pivot.y = 70;
 maskContainer.position.set(
   app.renderer.width / 2 + 40,
   app.renderer.height / 2
 );
-
-// maskContainer.rotation = -45;
-// mask.position.set(0,0);
 
 // Create a Graphics object, set a fill color, draw a rectangle
 let obj2 = new PIXI.Graphics();
@@ -260,18 +243,6 @@ app.stage.filters.push(noiseFilter);
 // trying out colorMatrixFilter
 let colorMatrix = new PIXI.filters.ColorMatrixFilter();
 app.stage.filters.push(colorMatrix);
-// colorMatrix.browni(true);
-// colorMatrix.hue(-120);
-// colorMatrix.kodachrome(true);
-// colorMatrix.lsd(true);
-// colorMatrix.negative(true);
-// colorMatrix.polaroid(true);
-// colorMatrix.contrast(0.2);
-// colorMatrix.night(0.5);
-// colorMatrix.blackAndWhite(true);
-// colorMatrix.technicolor(true);
-// colorMatrix.toBGR(true);
-// colorMatrix.vintage(true);
 
 // Animate!
 if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
